@@ -1,0 +1,65 @@
+schema
+  @server(
+    enableJIT: true
+    introspection: true
+    port: 8000
+    hostname: "0.0.0.0"
+    headers: { cors: { allowHeaders: ["*"], allowOrigins: ["*"] } }
+  )
+  @upstream(httpCache: 42, batch: { delay: 10 })
+  @link(src: "http://localhost:50051", type: Grpc)
+  @link(src: "http://localhost:50052", type: Grpc) {
+  query: Query
+}
+
+type Query {
+  users(request: GetUsersRequest!): UserList!
+    @grpc(
+      url: "http://localhost:50051"
+      method: "api.UserService.GetUsers"
+      body: "{{.args.request}}"
+    )
+
+  posts(request: GetPostsRequest!): PostList!
+    @grpc(
+      url: "http://localhost:50052"
+      method: "api.PostService.GetPosts"
+      body: "{{.args.request}}"
+    )
+}
+
+type UserList {
+  items: [User]
+}
+
+input GetUsersRequest {
+  ids: [Int]
+}
+
+input GetPostsRequest {
+  ids: [Int]
+}
+
+type PostList {
+  items: [Post]
+}
+
+type User {
+  id: Int
+  name: String
+  username: String
+  email: String
+}
+
+type Post {
+  id: Int
+  userId: Int
+  title: String
+  body: String
+  users(request: GetUsersRequest): UserList
+    @grpc(
+      url: "http://localhost:50051"
+      method: "api.UserService.GetUsers"
+      body: { ids: ["{{.value.userId}}"] }
+    )
+}

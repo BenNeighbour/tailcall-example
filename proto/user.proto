@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "proto/generated/user;userpb";
+
+package api;
+
+// Message representing a User.
+message User {
+  int32 id = 1;
+  string name = 2;
+  string username = 3;
+  string email = 4;
+}
+
+// Request message for fetching users.
+message GetUsersRequest {
+  repeated int32 ids = 1;
+}
+
+// Response message containing a list of users.
+message GetUsersResponse {
+  repeated User items = 1;
+}
+
+// User service definition.
+service UserService {
+  // RPC to fetch all users.
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+}
